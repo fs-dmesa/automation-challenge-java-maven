@@ -33,9 +33,10 @@ open target/site/surefire-report.html
 ## Traces
 
 Every test writes a Playwright trace to `traces/<testName>.zip`, pass or
-fail. View one by dragging it into
-[trace.playwright.dev](https://trace.playwright.dev) (no install needed), or
-with `npx playwright show-trace traces/<name>.zip` if you have Node.
+fail. View one by uploading the file at
+[https://trace.playwright.dev/](https://trace.playwright.dev/) — no install
+needed. If you have Node, `npx playwright show-trace traces/<name>.zip`
+works too.
 
 ## Layout
 
