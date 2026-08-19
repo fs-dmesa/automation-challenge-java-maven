@@ -20,6 +20,16 @@ required) and checks that a product title renders. It should pass before your
 interview starts; if it doesn't, that's an environment problem worth chasing
 down ahead of time rather than during the session.
 
+## Test report
+
+`mvn test` alone only writes plain XML/TXT to `target/surefire-reports/`.
+For a browsable HTML report:
+
+```
+mvn test surefire-report:report-only
+open target/site/surefire-report.html
+```
+
 ## Layout
 
 - `src/main/java/challenge/pages` — page objects
