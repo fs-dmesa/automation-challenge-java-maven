@@ -21,12 +21,12 @@ import java.nio.file.Paths;
 /**
  * Shared browser across the class, fresh context and page per test.
  * Pass -Dheadless=false to watch the browser while iterating locally.
- * A trace is recorded for every test but only written to disk when the test
- * doesn't pass - view one with `npx playwright show-trace traces/&lt;name&gt;.zip`.
+ * A trace is written to disk for every test, pass or fail - view one with
+ * `npx playwright show-trace traces/&lt;name&gt;.zip`.
  *
  * Tracing is stopped (and the context closed) from the TestWatcher callbacks,
  * not from an @AfterEach - JUnit 5 runs @AfterEach BEFORE TestWatcher fires,
- * so the pass/fail outcome isn't known yet at @AfterEach time. Verified with a
+ * so the outcome isn't known yet at @AfterEach time. Verified with a
  * throwaway ordering test before relying on it.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,17 +41,17 @@ public abstract class BaseTest {
     final TestWatcher traceWatcher = new TestWatcher() {
         @Override
         public void testSuccessful(ExtensionContext extensionContext) {
-            stopTracingAndClose(extensionContext, null);
+            stopTracingAndClose(extensionContext);
         }
 
         @Override
         public void testAborted(ExtensionContext extensionContext, Throwable cause) {
-            stopTracingAndClose(extensionContext, tracePathFor(extensionContext));
+            stopTracingAndClose(extensionContext);
         }
 
         @Override
         public void testFailed(ExtensionContext extensionContext, Throwable cause) {
-            stopTracingAndClose(extensionContext, tracePathFor(extensionContext));
+            stopTracingAndClose(extensionContext);
         }
     };
 
@@ -60,8 +60,8 @@ public abstract class BaseTest {
         return Paths.get("traces", safeName + ".zip");
     }
 
-    private void stopTracingAndClose(ExtensionContext extensionContext, Path tracePath) {
-        context.tracing().stop(new Tracing.StopOptions().setPath(tracePath));
+    private void stopTracingAndClose(ExtensionContext extensionContext) {
+        context.tracing().stop(new Tracing.StopOptions().setPath(tracePathFor(extensionContext)));
         context.close();
     }
 
