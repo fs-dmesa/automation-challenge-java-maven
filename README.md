@@ -1,7 +1,7 @@
 # Automation Challenge — Java / Maven
 
-Scaffold for the FastSpring SDET technical interview. This repo sets up the
-environment only — the actual challenge is given during your interview session.
+Environment scaffold for a FastSpring SDET technical interview. This repo
+contains no challenge content — that's given during the session.
 
 ## Prerequisites
 
@@ -15,8 +15,8 @@ mvn compile exec:java@install-playwright-browsers   # once per machine
 mvn test
 ```
 
-The smoke test should pass before your interview starts — if it doesn't,
-let us know ahead of time rather than during the session.
+This installs Chromium the first time, then runs the smoke test — it
+verifies the environment is wired up correctly.
 
 ## Headed vs headless
 
@@ -40,6 +40,7 @@ trace viewer. Stop the server with Ctrl+C.
 
 ## Layout
 
-- `src/main/java/challenge/pages` — page objects
+- `src/main/java/challenge/pages` — page objects (`@Step`-annotated actions show up in the report)
 - `src/main/java/challenge/support` — shared constants
 - `src/test/java/challenge` — test classes
+- `src/test/java/challenge/support/ChallengeAssertions` — assertion helpers that also log an Allure step, so a passed assertion still shows up in the report
