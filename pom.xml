@@ -51,14 +51,13 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <!-- Surefire only writes XML/TXT by default. This turns that into a browsable HTML report:
-                 mvn test surefire-report:report-only  ->  target/site/surefire-report.html -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>3.2.5</version>
-            </plugin>
-            <!-- Run once per machine: mvn compile exec:java@install-playwright-browsers -->
+            <!-- Kept as a separate manual step deliberately - do not bind this to a lifecycle
+                 phase. Playwright's CLI calls System.exit() on completion, and exec:java runs
+                 in the same JVM as Maven, so binding it to `test` silently kills the whole
+                 build before tests run (verified: exit code 0, but the test phase never
+                 executes). exec:exec (a forked JVM) avoids that but its %classpath token
+                 didn't resolve against this project's dependencies either. Not worth more
+                 fragility for one one-time setup command. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
