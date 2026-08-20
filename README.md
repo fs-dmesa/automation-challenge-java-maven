@@ -34,7 +34,9 @@ mvn allure:report exec:java@view-allure-report
 
 Run this after `mvn test`. Opens at the `http://localhost:<port>/` URL it
 prints. Shows the full test result, with each test's Playwright trace
-attached inline — pass or fail. Stop it with Ctrl+C.
+attached — pass or fail. Download it from the report and open it at
+[https://trace.playwright.dev/](https://trace.playwright.dev/) for the full
+trace viewer. Stop the server with Ctrl+C.
 
 ## Layout
 
