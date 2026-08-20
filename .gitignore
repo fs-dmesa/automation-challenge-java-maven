@@ -1,0 +1,10 @@
+target/
+build/
+.gradle/
+out/
+*.iml
+.idea/
+.vscode/
+.DS_Store
+traces/
+.allure/

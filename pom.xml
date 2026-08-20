@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.fastspring.interview</groupId>
+    <artifactId>automation-challenge-java-maven</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <playwright.version>1.49.0</playwright.version>
+        <junit.version>5.10.2</junit.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- No <scope>test</scope>: page objects in src/main use @Step, which needs
+             Allure on the main compile classpath too. -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-junit5</artifactId>
+            <version>2.25.0</version>
+        </dependency>
+        <!-- @Step/@Attachment need AspectJ weaving at test runtime - see the surefire
+             argLine below. Unlike the Gradle io.qameta.allure plugin, Maven doesn't wire
+             this up automatically. -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>1.9.25</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <!-- Allure defaults to ./allure-results (repo root) unless told otherwise -
+                         point it at target/ so a plain `mvn clean` removes it like everything else. -->
+                    <systemPropertyVariables>
+                        <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+                    </systemPropertyVariables>
+                    <!-- Weaves @Step/@Attachment at test runtime. The aspectjweaver.jar path
+                         comes from maven-dependency-plugin's "properties" goal below. -->
+                    <argLine>-javaagent:"${org.aspectj:aspectjweaver:jar}"</argLine>
+                </configuration>
+            </plugin>
+            <!-- Resolves ${groupId:artifactId:type} properties (used by the argLine above)
+                 to each dependency's actual jar path - no hardcoded version-specific path. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>getClasspathFilenames</id>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Kept as a separate manual step deliberately - do not bind this to a lifecycle
+                 phase. Playwright's CLI calls System.exit() on completion, and exec:java runs
+                 in the same JVM as Maven, so binding it to `test` silently kills the whole
+                 build before tests run (verified: exit code 0, but the test phase never
+                 executes). exec:exec (a forked JVM) avoids that but its %classpath token
+                 didn't resolve against this project's dependencies either. Not worth more
+                 fragility for one one-time setup command. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>install-playwright-browsers</id>
+                        <configuration>
+                            <mainClass>com.microsoft.playwright.CLI</mainClass>
+                            <arguments>
+                                <argument>install</argument>
+                                <argument>chromium</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <!-- mvn test exec:java@view-allure-report - serves the generated Allure report
+                         locally. Allure's report loads its data via XHR, which browsers block under
+                         file:// (verified: opening it directly shows a blank page and CORS errors),
+                         so this uses a plain embedded HTTP server - no `allure serve`, no separate
+                         CLI install. -->
+                    <execution>
+                        <id>view-allure-report</id>
+                        <configuration>
+                            <mainClass>challenge.support.AllureReportServer</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Pinned to the 2.x line deliberately: 3.x pulls in a completely different
+                 report engine (Allure 3, via an npm/Node install) that would make this repo's
+                 report inconsistent with the Gradle repo, which uses the io.qameta.allure
+                 Gradle plugin 2.11.2 / Allure 2. -->
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>2.18.0</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
