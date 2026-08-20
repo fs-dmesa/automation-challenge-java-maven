@@ -36,7 +36,22 @@ Every test writes a Playwright trace to `traces/<testName>.zip`, pass or
 fail. View one by uploading the file at
 [https://trace.playwright.dev/](https://trace.playwright.dev/) — no install
 needed. If you have Node, `npx playwright show-trace traces/<name>.zip`
-works too.
+works too. Every trace is also attached to the Allure report below, so you
+usually don't need this file directly.
+
+## Allure report
+
+```
+mvn test allure:report exec:java@view-allure-report
+```
+
+This runs the tests, generates an Allure report, and serves it at the URL it
+prints (`http://localhost:<port>/`). Allure's report loads its data via XHR,
+which browsers block outright under `file://` — opening `index.html`
+directly just shows a blank page — so this runs a small embedded HTTP
+server instead of requiring `allure serve` or a separate Allure install.
+Each test's Playwright trace appears inline as an attachment. Stop the
+server with Ctrl+C.
 
 ## Layout
 

@@ -29,6 +29,12 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-junit5</artifactId>
+            <version>2.25.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -37,6 +43,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
+                <configuration>
+                    <!-- Allure defaults to ./allure-results (repo root) unless told otherwise -
+                         point it at target/ so a plain `mvn clean` removes it like everything else. -->
+                    <systemPropertyVariables>
+                        <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
             <!-- Surefire only writes XML/TXT by default. This turns that into a browsable HTML report:
                  mvn test surefire-report:report-only  ->  target/site/surefire-report.html -->
@@ -61,7 +74,27 @@
                             </arguments>
                         </configuration>
                     </execution>
+                    <!-- mvn test exec:java@view-allure-report - serves the generated Allure report
+                         locally. Allure's report loads its data via XHR, which browsers block under
+                         file:// (verified: opening it directly shows a blank page and CORS errors),
+                         so this uses a plain embedded HTTP server - no `allure serve`, no separate
+                         CLI install. -->
+                    <execution>
+                        <id>view-allure-report</id>
+                        <configuration>
+                            <mainClass>challenge.support.AllureReportServer</mainClass>
+                        </configuration>
+                    </execution>
                 </executions>
+            </plugin>
+            <!-- Pinned to the 2.x line deliberately: 3.x pulls in a completely different
+                 report engine (Allure 3, via an npm/Node install) that would make this repo's
+                 report inconsistent with the Gradle repo, which uses the io.qameta.allure
+                 Gradle plugin 2.11.2 / Allure 2. -->
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>2.18.0</version>
             </plugin>
         </plugins>
     </build>

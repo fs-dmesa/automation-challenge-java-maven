@@ -7,6 +7,7 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.Tracing;
+import io.qameta.allure.Allure;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,13 +16,17 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.extension.TestWatcher;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
  * Shared browser across the class, fresh context and page per test.
  * Pass -Dheadless=false to watch the browser while iterating locally.
- * A trace is written to disk for every test, pass or fail - view one with
+ * A trace is written to disk for every test, pass or fail, and attached to
+ * the Allure report - view one standalone with
  * `npx playwright show-trace traces/&lt;name&gt;.zip`.
  *
  * Tracing is stopped (and the context closed) from the TestWatcher callbacks,
@@ -61,8 +66,22 @@ public abstract class BaseTest {
     }
 
     private void stopTracingAndClose(ExtensionContext extensionContext) {
-        context.tracing().stop(new Tracing.StopOptions().setPath(tracePathFor(extensionContext)));
+        Path tracePath = tracePathFor(extensionContext);
+        context.tracing().stop(new Tracing.StopOptions().setPath(tracePath));
         context.close();
+        attachTraceToAllureReport(tracePath);
+    }
+
+    private void attachTraceToAllureReport(Path tracePath) {
+        try {
+            Allure.addAttachment(
+                    "Playwright trace",
+                    "application/zip",
+                    Files.newInputStream(tracePath),
+                    "zip");
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not attach Playwright trace " + tracePath, e);
+        }
     }
 
     @BeforeAll
